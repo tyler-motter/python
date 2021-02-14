@@ -1,78 +1,58 @@
-#import modules
+#import dependecies
 import os
 import csv
 
-#defining variables
-total_months = 0
-total_amount = 0
-month_int_change = 0
-month_int_count = 0
-month_array_change = []
-month_array_count = []
-most_increase = 0
-month_increase = 0
-most_decrease = 0
-month_decrease = 0
+#setting the file
+csvpath = os.path.join("Resources", "election_data.csv")
 
-#setting file path and opening file
-csvpath = os.path.join('.', 'PyBank' , 'Resources' , 'budget_data.csv')
+#declaring variables
+int_votes = 0
+winner_votes = 0
+candidates = []
+candidate_names = []
+percent_votes = []
+number_votes = []
+
+#opening the file, setting delimiter, and skipping headers
 with open(csvpath, newline='') as csvfile:
-    
-    #determines data by delimiting by commas
-    csvreader = csv.reader(csvfile, delimiter=',')
-    
-    #Skips the header by going to next row
+    csvreader = csv.reader(csvfile, delimiter=",")
     csv_header = next(csvreader)
-    row = next(csvreader)
     
-    #going to calculate the months, profit amount, and sets row variable
-    previous_row = int(row[1])
-    total_months += 1
-    total_amount += int(row[1])
-    Most_increase = int(row[1])
-    month_increase = row[0]
-    
-    #reads each row after the header string
+    #for loop adding each vote each loop, identifying unique names
+    #else is adding votes for unique candidates
     for row in csvreader:
-        
-        #Adds months and profits/losses from the data
-        total_months += 1
-        total_amount += int(row[1])
-        
-        #calculates profit/loss changes from  month to month
-        month_int_change = int(row[1]) - previous_row
-        month_array_change.append(month_int_change)
-        previous_row = int(row[1])
-        month_array_count.append(row[0])
-        
-        #if statements to determine highest and lowest amount 
-        #by override with current row
-        if int(row[1]) > most_increase:
-            most_increase = int(row[1])
-            month_increase = row[0]
-            
-        if int(row[1]) < most_decrease:
-            most_decrease = int(row[1])
-            month_decrease = row[0]
-            
-    #averages total sum of the array with the length (Average)        
-    average_change = sum(month_array_change)/ len(month_array_change)
+        int_votes += 1
+        if row[2] not in candidate_names:
+            candidate_names.append(row[2])
+            number_votes.append(1)
+        else:
+            candidate_list = candidate_names.index(row[2])
+            number_votes[candidate_list] += 1
+
+    #calculating percentage of votes
+    for i in range(len(number_votes)):
+        percent_votes.append(number_votes[i] / int_votes)
     
-    #takes highest value from the array
-    high = max(month_array_change)
-    low = min(month_array_change)
-
-#printing out the analysis   
-financial_analysis = (f'''Financial Analysis
-    ------------------
-    Total Months: {total_months}
-    Total: ${total_amount}
-    Average Change: ${average_change:.2f}  
-    Greatest Increase in Profits: {month_increase} ${high}
-    Greatest Decrease in Profits: {month_decrease} ${low}''')
-print(financial_analysis)
-
-#using previous variable to create new output file
-outputtxt = open('output.txt', 'w')
-outputtxt.write(financial_analysis)
-outputtxt.close() 
+    #calculate winner
+    for i in range(len(number_votes)):
+        if number_votes[i] > winner_votes:
+            winner_vote = number_votes[i]
+            winner = candidate_names[i]
+    
+    #creating text file
+    results = os.path.join("Resources", "results.txt")
+    with open(results, 'w') as textfile:
+        textfile.write(f"Election Results \n"
+                       f"-----------------\n"
+                       f"Total Votes: {int_votes} \n"
+                       f"------------------\n")
+        
+        for i in range(len(candidate_names)):
+            textfile.write(f"{candidate_names[i]}: {(percent_votes[i] * 100)} {(number_votes[i])}\n")
+        textfile.write(f"-----------------\n"
+                       f"Winner: {winner} \n"
+                       f"------------------\n")
+    #printing text file
+    with open(results, 'r') as analysis:
+        result_display = analysis.read()
+        print(result_display)
